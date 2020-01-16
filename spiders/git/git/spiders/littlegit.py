@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from github.items import GitItem
+from git.items import GitItem
 import pandas as pd
 import json
 import time
@@ -30,14 +30,14 @@ class LittlegitSpider(scrapy.Spider):
 
         index = self.start_urls.index(response.url)
 
-        item = GithubItem()
+        item = GitItem()
 
         sites = json.loads(response.body_as_unicode())
 
         item["paper_title"] = df["paper_title"][index]
 
         item["repo_size"] = sites["size"]
-        
+
         # item["repo_name"] = sites["name"]
 
         item["repo_url"] = sites["html_url"]
@@ -49,22 +49,18 @@ class LittlegitSpider(scrapy.Spider):
         item["star_counts"] = sites["stargazers_count"]
 
         item["repo_created_at"] = sites["created_at"][:10]
-        
+
         item["repo_updated_at"] = sites["updated_at"][:10]
-        
+
         item["repo_kept_time"] = caltime(item["repo_created_at"], item["repo_updated_at"])
-        
+
         item["open_issues_count"] = sites["open_issues_count"]
 
         url1 = response.url.replace('?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e','/issues?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e')
-        
-        scrapy.Request(url1, meta={"item":item}, callback=self.detail_parse1)
-        
-        url2 = response.url.replace('?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e','/contents/README.md?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e')
-        
-        scrapy.Request(url2, meta={"item":item}, callback=self.detail_parse2)
 
-        yield item
+        yield scrapy.Request(url1, meta={"item":item}, callback=self.detail_parse1)
+
+        #yield item
 
     def detail_parse1(self, response):
         sites = json.loads(response.body_as_unicode())
@@ -77,7 +73,10 @@ class LittlegitSpider(scrapy.Spider):
             item["latest_issues_updated_at"] = sites[0]["updated_at"][:10]
         except:
             item["latest_issues_updated_at"] = None
-        response.meta["item"] = item
+        print(response.url)
+        #url2 = response.url.replace('?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e','/contents/README.md?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e')
+        #yield scrapy.Request(url2, meta={"item": item}, callback=self.detail_parse2)
+
 
     def detail_parse2(self, response):
         sites = json.loads(response.body_as_unicode())
@@ -86,8 +85,8 @@ class LittlegitSpider(scrapy.Spider):
             item["readme_size"] = sites["size"]
         except:
             url = response.url.replace("README", "readme")
-            scrapy.Request(url, meta={"item":item}, callback=self.detail_parse2)
-        response.meta["item"] = item
+            yield scrapy.Request(url, meta={"item":response.meta["item"]}, callback=self.detail_parse2)
+        return item
 
 def caltime(date1, date2):
     date1 = time.strptime(date1, "%Y-%m-%d")
