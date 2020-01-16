@@ -6,8 +6,6 @@
 # https://docs.scrapy.org/en/latest/topics/items.html
 
 import scrapy
-
-
 class SpiderItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
@@ -35,7 +33,4 @@ class SpiderItem(scrapy.Item):
     # 论文所解决的任务，如computer vision，nlp等
     task = scrapy.Field()
 
-    # 具体任务，如computer vision/image classification
-    subtask = scrapy.Field()
 
-    evaluation = scrapy.Field()

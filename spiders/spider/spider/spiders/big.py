@@ -3,7 +3,7 @@ import pandas as pd
 import urllib
 from spider.items import SpiderItem
 #dir = '/Users/zhaohan/Desktop/papers-with-abstracts.json'
-dir = '/Users/zhaohan/Desktop/deep_research/data/links-between-papers-and-code.json'
+dir = '/home/zhaohan/Desktop/deep_research/data/links-between-papers-and-code.json'
 df = pd.read_json(dir)
 
 class BigSpider(scrapy.Spider):
@@ -19,10 +19,10 @@ class BigSpider(scrapy.Spider):
 
     def parse(self, response):
         for link in response.xpath('//h1/a/@href').extract():
-            yield scrapy.Request(response.urljoin(link), callback=self.parse1)
+            yield scrapy.Request(response.urljoin(link), callback=self.parse_ppc)
 
 
-    def parse1(self, response):
+    def parse_ppc(self, response):
         item = SpiderItem()
         item["paper_title"] = response.xpath('//div[@class="paper-title"]/div/div/h1/text()').extract_first()
         abstract = response.xpath('//div[@class="paper-abstract"]/div/div/p/text()').extract_first()
@@ -57,4 +57,12 @@ class BigSpider(scrapy.Spider):
             for frame in frames:
                 frame = frame.replace('/static/frameworks/', '').replace('.png', '').replace('py', '')
                 item["frame"].append(frame)
+
+
         return item
+
+    def parse_git(self, response):
+        pass
+
+    def parse_ssr(self, response):
+        pass
