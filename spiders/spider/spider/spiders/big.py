@@ -31,9 +31,9 @@ class BigSpider(scrapy.Spider):
             item["paper_abstract"] = (abstract + hideabstract).replace('\n', '')
         except:
             item["paper_abstract"] = abstract.replace('\n', '')
-        item["repo_url"] = response.xpath(
+        item["ppc_all_repo_address"] = response.xpath(
             '//div[@id="id_paper_implementations_collapsed"]/div/div/div/a/@href').extract()
-        item["star_number"] = []
+        item["ppc_star"] = []
         star_number = response.xpath(
             '//div[@id="id_paper_implementations_collapsed"]/div/div[@class="col-md-3"]/div/text()').extract()
 
@@ -43,68 +43,51 @@ class BigSpider(scrapy.Spider):
 
         tags = response.xpath('//div[@class="paper-tasks"]/div/div/ul/li/a/@href').extract()
 
-        item["task"] = []
+        item["ppc_tasks_classification"] = []
         for tag in tags:
             tag = tag.replace('/task/', '').replace('-', ' ')
-            item["task"].append(tag)
+            item["ppc_tasks_classification"].append(tag)
 
-        item["paper_url_pdf"] = response.xpath('//div[@class="paper-abstract"]/div/div/a/@href').extract()[0]
-        item["paper_url_abs"] = response.xpath('//div[@class="paper-abstract"]/div/div/a/@href').extract()[1]
+        #item["paper_url_pdf"] = response.xpath('//div[@class="paper-abstract"]/div/div/a/@href').extract()[0]
+        item["ppc_arxiv_address"] = response.xpath('//div[@class="paper-abstract"]/div/div/a/@href').extract()[1]
         frames = response.xpath(
             '//div[@id="id_paper_implementations_collapsed"]/div/div[@class="col-md-2"]/div/img/@src').extract()
-        item["frame"] = []
+        item["ppc_codeframe"] = []
         if frames:
             for frame in frames:
                 frame = frame.replace('/static/frameworks/', '').replace('.png', '').replace('py', '')
-                item["frame"].append(frame)
+                item["ppc_codeframe"].append(frame)
 
+        git_repo_url = item["ppc_all_repo_address"][0].replace('github.com', 'api.github.com/repos') + "?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e"
+        
+        yield scrapy.Request(git_repo_url, meta={"item": item}, callback=self.parse_git)
 
-        return item
 
     def parse_git(self, response):
 
-        index = self.start_urls.index(response.url)
-
-        item = GitItem()
-
         sites = json.loads(response.body_as_unicode())
 
-        item["paper_title"] = df["paper_title"][index]
+        #item["repo_size"] = sites["size"]
 
-        item["repo_size"] = sites["size"]
+        #item["repo_url"] = sites["html_url"]
 
-        # item["repo_name"] = sites["name"]
+        item["git_watch"] = sites["subscribers_count"]
 
-        item["repo_url"] = sites["html_url"]
+        item["git_fork"] = sites["forks_count"]
 
-        item["subscribe_count"] = sites["subscribers_count"]
+        item["git_star"] = sites["stargazers_count"]
 
-        item["forks_count"] = sites["forks_count"]
+        item["git_repo_created_time"] = sites["created_at"][:10]
 
-        item["star_counts"] = sites["stargazers_count"]
+        #item["repo_updated_at"] = sites["updated_at"][:10]
 
-        item["repo_created_at"] = sites["created_at"][:10]
+        #item["repo_kept_time"] = caltime(item["repo_created_at"], item["repo_updated_at"])
 
-        item["repo_updated_at"] = sites["updated_at"][:10]
+        item["git_open_issues_count"] = sites["open_issues_count"]
 
-        item["repo_kept_time"] = caltime(item["repo_created_at"], item["repo_updated_at"])
+        url1 = response.url.replace('?client_id','/issues?client_id')
 
-        item["open_issues_count"] = sites["open_issues_count"]
-
-        url1 = response.url.replace('?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e','/issues?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e')
-
-        yield scrapy.Request(url1, meta={"item":item}, callback=self.detail_parse1)
-
-    def parse_git_readme(self, response):
-
-        sites = json.loads(response.body_as_unicode())
-        item = response.meta["item"]
-        try:
-            item["readme_size"] = sites["size"]
-        except:
-            url = response.url.replace("README", "readme")
-            yield scrapy.Request(url, meta={"item":response.meta["item"]}, callback=self.detail_parse2)
-        return item
+        yield scrapy.Request(url1, meta={"item":item}, callback=self.parse_git_issues)
 
     def parse_git_issues(self, response):
         
@@ -118,22 +101,47 @@ class BigSpider(scrapy.Spider):
             item["latest_issues_updated_at"] = sites[0]["updated_at"][:10]
         except:
             item["latest_issues_updated_at"] = None
-        print(response.url)
+
+        url = response.url.replace('?client_id','/contents/README.md?client_id')
+        yield scrapy.Request()
+        
+
+    def parse_git_readme(self, response):
+        sites = json.loads(response.body_as_unicode())
+        item = response.meta["item"]
+        try:
+            item["readme_size"] = sites["size"]
+        except:
+            url = response.url.replace("README", "readme")
+            yield scrapy.Request(url, meta={"item":response.meta["item"]}, callback=self.detail_parse2)
+        return item
 
     def parse_ssr(self, response):
+
         item = SementicItem()
+
         json_data = json.loads(response.body_as_unicode())
-        item["abstract"] = json_data["abstract"]
-        item["arxivId"] = json_data["arxivId"]
-        item["authors"] = json_data["authors"]
+        
+        item["paper_author"] = json_data["authors"]
+        
         item["citationVelocity"] = json_data["citationVelocity"]
+        
         item["citations"] = json_data["citations"]
+        
         item["doi"] = json_data["doi"]
+        
         item["influentialCitationCount"] = json_data["influentialCitationCount"]
+        
         item["references"] = json_data["references"]
+        
         item["title"] = json_data["title"]
+        
         item["topics"] = json_data["topics"]
+        
         item["url"] = json_data["url"]
+        
         item["venue"] = json_data["venue"]
+        
         item["year"] = json_data["year"]
+        
         yield item
