@@ -24,7 +24,7 @@ class SpiderPipeline(object):
         return item
 
     def save(self, item):
-    	sql = '''insert int website(paper_title,
+    	sql = '''insert into website(paper_title,
     								paper_author,
     								paper_abstract,
     								git_star,
