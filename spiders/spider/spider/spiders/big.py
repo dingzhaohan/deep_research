@@ -20,16 +20,16 @@ class BigSpider(scrapy.Spider):
     def parse(self, response):
         item = SpiderItem()
         position = list(df["paper_url"]).index(response.url)
-        item["ppc_arxiv_id"] = df["paper_arxiv_id"][position]
-        item["paper_title"] = df["paper_title"][position]
+        item["ppc_arxiv_id"] = df["paper_arxiv_id"][position].strip()
+        item["paper_title"] = df["paper_title"][position].strip()
         #print(item["ppc_arxiv_id"])
         abstract = response.xpath('//div[@class="paper-abstract"]/div/div/p/text()').extract_first()
         if abstract:
             try:
                 hideabstract = response.xpath('//div[@class="paper-abstract"]/div/div/p/span/text()').extract()[1]
-                item["paper_abstract"] = (abstract + hideabstract).replace('\n', '')
+                item["paper_abstract"] = (abstract + hideabstract).replace('\n', '').strip()
             except:
-                item["paper_abstract"] = abstract.replace('\n', '')
+                item["paper_abstract"] = abstract.replace('\n', '').strip()
         else:
             item["abstract"] = None
         item["ppc_all_repo_address"] = response.xpath(
