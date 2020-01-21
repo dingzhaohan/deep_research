@@ -24,7 +24,7 @@ class SpiderPipeline(object):
 
 	def process_item(self, item, spider):
 		self.cursor.execute(self.sql,(item["paper_title"],
-										 item["paper_author"],
+										 ','.join(item["paper_author"]),
 										 item["paper_abstract"],
 										 item["git_star"],
 										 item["git_watch"],
@@ -33,12 +33,12 @@ class SpiderPipeline(object):
     									 item["git_open_issues_count"],
     									 item["git_repo_created_time"],
     									 item["ppc_star"],
-    									 item["ppc_codeframe"],
-    									 item["ppc_tasks_classification"],
-    									 item["ppc_all_repo_address"],
+    									 ','.join(item["ppc_codeframe"]),
+    									 ','.join(item["ppc_tasks_classification"]),
+    									 ','.join(item["ppc_all_repo_address"]),
     									 item["ppc_arxiv_address"],
     									 item["ssr_citation"],
-    									 item["ssr_tasks_classification"],
+    									 ','.join(item["ssr_tasks_classification"]),
     									 item["ssr_img_address"],
     									 item["ssr_img_count"],
     									 item["ssr_influence"],
@@ -50,32 +50,7 @@ class SpiderPipeline(object):
 	@property
 	def sql(self):
 		if not self._sql:
-			self._sql = '''insert into website(paper_title,
-    								paper_author,
-    								paper_abstract,
-    								git_star,
-    								git_watch,
-    								git_fork,
-    								git_readme_size,
-    								git_open_issues_count,
-    								git_repo_created_time,
-    								ppc_star,
-    								ppc_codeframe,
-    								ppc_tasks_classification,
-    								ppc_all_repo_address,
-    								ppc_arxiv_address,
-    								ssr_citation,
-    								ssr_tasks_classification,
-    								ssr_img_address,
-    								ssr_img_count,
-    								ssr_influence,
-    								ssr_venue,
-    								ssr_paper_submit_year,
-    								)VALUES(
-    								%s, %s, %s, %s, %s, %s,
-    								%s, %s, %s, %s, %s, %s,
-    								%s, %s, %s, %s, %s, %s,
-    								%s, %s, %s'''
+			self._sql = '''insert into website(paper_title,paper_author,paper_abstract,git_star,git_watch,git_fork,git_readme_size,git_open_issues_count,git_repo_created_time,ppc_star,ppc_codeframe,ppc_tasks_classification,ppc_all_repo_address,ppc_arxiv_address,ssr_citation,ssr_tasks_classification,ssr_img_address,ssr_img_count,ssr_influence,ssr_venue,ssr_paper_submit_year) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'''
 			return self._sql
 		return self._sql
 
