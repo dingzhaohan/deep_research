@@ -117,7 +117,7 @@ class BigSpider(scrapy.Spider):
             item["readme_size"] = sites["size"]
         except:
             url = response.url.replace("README", "readme")
-            yield scrapy.Request(url, meta={"item":response.meta["item"]}, callback=self.detail_parse2)
+            yield scrapy.Request(url, meta={"item":item}, callback=self.detail_parse2)
         return item
 
     def parse_ssr(self, response):
@@ -142,4 +142,15 @@ class BigSpider(scrapy.Spider):
         item["ssr_img_address"] = ""
         item["ssr_img_count"] = 0
         item["ssr_influence"] = json_data["influentialCitationCount"]
+
+        #url = 'https://www.semanticscholar.org/search?q=' + item['paper_title'].replace(' ', '%20').replace("'", "%27").replace(':', '%3A').replace('(', '%28').replace(')', '%29')
+        #yield scrapy.Request(url, meta={"item": item}, callback=self.parse_ssr_img)
         return item
+
+    def parse_ssr_img(self, response):
+        img_src = response.xpath('//ul[@class="flex-row paper-detail-figures-list"]/li/a/@href').extract()
+        item["img_src"] = []
+        for i in img_src:
+            item["img_src"].append("https://www.semanticscholar.org" + i)
+        item["img_num"] = len(item["img_src"])
+        yield item

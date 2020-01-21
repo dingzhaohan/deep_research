@@ -39,7 +39,7 @@ class SpiderPipeline(object):
     									 item["ppc_arxiv_address"],
     									 item["ssr_citation"],
     									 ','.join(item["ssr_tasks_classification"]),
-    									 item["ssr_img_address"],
+    									 ','.join(item["ssr_img_address"]),
     									 item["ssr_img_count"],
     									 item["ssr_influence"],
     									 item["ssr_venue"],
