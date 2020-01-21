@@ -6,7 +6,7 @@ import json
 import time
 import datetime
 # df = pd.read_json("/home/zhaohan/Desktop/research/lastdata_papers_with_code_repo.json")
-df = pd.read_json('/home/zhaohan/Desktop/research/links-between-papers-and-code.json')
+df = pd.read_json('/Users/zhaohan/Desktop/deep_research/data/links-between-papers-and-code.json')
 '''
 repo = set()
 for i in range(len(df)):
@@ -42,11 +42,11 @@ class LittlegitSpider(scrapy.Spider):
 
         item["repo_url"] = sites["html_url"]
 
-        item["subscribe_count"] = sites["subscribers_count"]
+        item["git_watch"] = sites["subscribers_count"]
 
-        item["forks_count"] = sites["forks_count"]
+        item["git_fork"] = sites["forks_count"]
 
-        item["star_counts"] = sites["stargazers_count"]
+        item["git_star"] = sites["stargazers_count"]
 
         item["repo_created_at"] = sites["created_at"][:10]
 
@@ -58,9 +58,9 @@ class LittlegitSpider(scrapy.Spider):
 
         url1 = response.url.replace('?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e','/issues?client_id=a26c83afeb1a41304d10&client_secret=ea8586a6b1d16c9f645112fd04b5bf57f5bae88e')
 
-        yield scrapy.Request(url1, meta={"item":item}, callback=self.detail_parse1)
+        #yield scrapy.Request(url1, meta={"item":item}, callback=self.detail_parse1)
 
-        #yield item
+        yield item
 
     def detail_parse1(self, response):
         sites = json.loads(response.body_as_unicode())

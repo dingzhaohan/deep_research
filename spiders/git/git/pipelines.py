@@ -5,23 +5,34 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
+import pymysql
+from twisted.enterprise import adbapi
+from pymysql import cursors
 
 class GitPipeline(object):
-    def __init__():
-		self.conn = MySQLdb.connect(
-			host = '123.57.37.103',
-			port = 3306,
-			user = 'root',
-			password = '87793faa',
-			charset = 'utf8',
-			db = 'deep_research'
-			)
+    def __init__(self):
+        dbparams = {
+            'host':'123.57.37.103',
+            'port':3306,
+            'user':'root',
+            'password':'root',
+            'database':'deep_research',
+            'charset':'utf8'
+        }
+        self.conn = pymysql.connect(**dbparams)
+        self.cursor = self.conn.cursor()
+        self._sql = None
+
+
     def process_item(self, item, spider):
-    	self.save(item)
+        self.cursor.execute(self.sql,(item['git_star'], item['git_watch'], item['git_fork']))
+        self.conn.commit()
         return item
 
-    def save(self, item):
-    	sql = '''insert into test(paper_title, star, fork, watch)VALUES(%s, %d, %d, %d)'''
-    	self.conn.cursor().execute(sql, [item["paper_title"], item["git_star"], item["git_fork"], item["git_watch"]])
-    	self.conn.commit()
+    @property
+    def sql(self):
+        if not self._sql:
+            self._sql = '''insert into test(star, fork, watch) values(%s, %s, %s)'''
+            return self._sql
+        return self._sql
 

@@ -21,11 +21,11 @@ class GitItem(scrapy.Item):
 
     repo_updated_at = scrapy.Field()
 
-    subscribe_count = scrapy.Field()
+    git_watch = scrapy.Field()
 
-    forks_count = scrapy.Field()
+    git_fork = scrapy.Field()
 
-    star_counts = scrapy.Field()
+    git_star = scrapy.Field()
 
     latest_issues_created_at = scrapy.Field()
 
