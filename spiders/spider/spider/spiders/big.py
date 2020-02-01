@@ -49,9 +49,6 @@ class BigSpider(scrapy.Spider):
             tag = tag.replace('/task/', '').replace('-', ' ')
             item["ppc_tasks_classification"].append(tag)
 
-        #item["paper_url_pdf"] = response.xpath('//div[@class="paper-abstract"]/div/div/a/@href').extract()[0]
-        #item["ppc_arxiv_address"] = response.xpath('//div[@class="paper-abstract"]/div/div/a/@href').extract()[1]
-        item["ppc_arxiv_address"] = None
         frames = response.xpath(
             '//div[@id="id_paper_implementations_collapsed"]/div/div[@class="col-md-2"]/div/img/@src').extract()
         item["ppc_codeframe"] = []
@@ -96,15 +93,17 @@ class BigSpider(scrapy.Spider):
         if item["ppc_arxiv_id"]:
             url = 'https://api.semanticscholar.org/v1/paper/arXiv:' + str(item["ppc_arxiv_id"])
             #print(url)
+            item["ppc_arxiv_address"] = "https://arxiv.org/pdf/" + item["ppc_arxiv_id"]
             yield scrapy.Request(url, meta={"item": item}, callback=self.parse_ssr)
         else:
             print("ssr not exist")
-            item["paper_author"] = None
-            item["ssr_citation"] = None
-            item["ssr_tasks_classification"] = None
-            item["ssr_venue"] = None
-            item["ssr_paper_submit_year"] = None
-            item["ssr_img_address"] = ""
+            item["ppc_arxiv_address"] = "Unknown"
+            item["paper_author"] = ["Unknown"]
+            item["ssr_citation"] = 0
+            item["ssr_tasks_classification"] = ["Unknown"]
+            item["ssr_venue"] = "Unknown"
+            item["ssr_paper_submit_year"] = "Unknown"
+            item["ssr_img_address"] = "Unknown"
             item["ssr_img_count"] = 0
             item["ssr_influence"] = 0
             yield item
